@@ -1,7 +1,10 @@
 package dev.manifest.beatbox;
 
 import android.content.Context;
+import android.content.res.AssetFileDescriptor;
 import android.content.res.AssetManager;
+import android.media.AudioManager;
+import android.media.SoundPool;
 import android.util.Log;
 
 import java.io.IOException;
@@ -10,15 +13,28 @@ import java.util.List;
 
 public class BeatBox {
 
-    public static final String TAG = "BeatBox";
-    public static final String SOUNDS_FOLDER = "sample_sounds";
+    private static final String TAG = "BeatBox";
+
+    private static final String SOUNDS_FOLDER = "sample_sounds";
+    private static final int MAX_SOUNDS = 5;
+
 
     private AssetManager assets;
     private List<Sound> sounds = new ArrayList<>();
+    private SoundPool soundPool;
 
     public BeatBox(Context context) {
         assets = context.getAssets();
+        soundPool = new SoundPool(MAX_SOUNDS, AudioManager.STREAM_MUSIC, 0);
         loadSounds();
+    }
+
+    public void play(Sound sound) {
+        Integer soundId = sound.getSoundId();
+        if (soundId == null) {
+            return;
+        }
+        soundPool.play(soundId, 1.0f, 1.0f, 1, 0, 1.0f);
     }
 
     private void loadSounds() {
@@ -31,10 +47,22 @@ public class BeatBox {
             return;
         }
         for (String fileName : soundNames) {
-            String assetPath = SOUNDS_FOLDER + "/" + fileName;;
-            Sound sound = new Sound(assetPath);
-            sounds.add(sound);
+            try {
+                String assetPath = SOUNDS_FOLDER + "/" + fileName;
+                ;
+                Sound sound = new Sound(assetPath);
+                load(sound);
+                sounds.add(sound);
+            } catch (IOException ioe) {
+                Log.e(TAG, "Could not load sound " + fileName, ioe);
+            }
         }
+    }
+
+    private void load(Sound sound) throws IOException {
+        AssetFileDescriptor afd = assets.openFd(sound.getAssetPath());
+        int soundId = soundPool.load(afd, 1);
+        sound.setSoundId(soundId);
     }
 
     public List<Sound> getSounds() {
