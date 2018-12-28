@@ -1,6 +1,9 @@
 package dev.manifest.beatbox;
 
-public class SoundViewModel {
+import android.databinding.BaseObservable;
+import android.databinding.Bindable;
+
+public class SoundViewModel extends BaseObservable {
 
     private Sound sound;
     private BeatBox beatBox;
@@ -13,11 +16,13 @@ public class SoundViewModel {
         return sound;
     }
 
+    @Bindable
     public String getTitle() {
         return sound.getName();
     }
 
     public void setSound(Sound sound) {
         this.sound = sound;
+        notifyChange();
     }
 }
